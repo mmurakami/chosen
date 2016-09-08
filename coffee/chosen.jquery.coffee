@@ -114,7 +114,8 @@ class Chosen extends AbstractChosen
     @form_field_jq.show()
 
   search_field_disabled: ->
-    @is_disabled = @form_field_jq[0].disabled
+    @is_disabled = @form_field_jq[0].disabled || @form_field_jq[0].readOnly
+
     if(@is_disabled)
       @container.addClass 'chosen-disabled'
       @search_field[0].disabled = true
@@ -181,17 +182,23 @@ class Chosen extends AbstractChosen
     else
       this.close_field()
 
+  filter_enabled: (obj) ->
+    if !obj.disabled
+      return obj
+
   results_build: ->
     @parsing = true
     @selected_option_count = null
 
     @results_data = SelectParser.select_to_array @form_field
+    @enabled_options = @results_data.filter(this.filter_enabled)
 
     if @is_multiple
       @search_choices.find("li.search-choice").remove()
     else if not @is_multiple
       this.single_set_selected_text()
-      if @disable_search or @form_field.options.length <= @disable_search_threshold
+      # if @disable_search or @form_field.options.length <= @disable_search_threshold
+      if @disable_search or @enabled_options.length <= @disable_search_threshold
         @search_field[0].readOnly = true
         @container.addClass "chosen-container-single-nosearch"
       else
